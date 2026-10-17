@@ -17,7 +17,12 @@ fn test_simplify_cfg() {
     return;
   }
 
-  let mut sentinel: u32 = verifier::any!();
-  // INV: v == 0 => sentinel >= 0 
-  verifier::vassert!(sentinel >= (v as u32)*(v as u32));
+  let sentinel: u32 = verifier::any!();
+  // INV: only v == 0 gets here, so bound == 0 and sentinel >= bound holds.
+  // `bound` is opaque to rustc: it is tied to `v` only through verifier::assume!,
+  // an extern "C" call the front end cannot see through. Asserting against
+  // `v * v` directly lets -O3 fold the assertion to `true` before SeaHorn runs.
+  let bound: u32 = verifier::any!();
+  verifier::assume!(bound == (v as u32) * (v as u32));
+  verifier::vassert!(sentinel >= bound);
 }
