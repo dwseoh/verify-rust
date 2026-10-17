@@ -23,10 +23,18 @@ struct Node {
     next: *mut Node,
 }
 
+// Walks at most MAX_NODES nodes. The constant trip count lets LLVM fully
+// unroll the loop; an unbounded `while !p.is_null()` is cut to one
+// iteration by SeaHorn, which makes the assertion after it unreachable.
+const MAX_NODES: usize = 4;
+
 #[inline(never)]
 unsafe fn sum_list(mut p: *const Node) -> i32 {
     let mut s: i32 = 0;
-    while !p.is_null() {
+    for _ in 0..MAX_NODES {
+        if p.is_null() {
+            break;
+        }
         s = s.wrapping_add((*p).val);
         p = (*p).next;
     }
